@@ -1,0 +1,9 @@
+
+target/
+.git/
+.idea/
+.env
+frontend/node_modules/
+frontend/dist/
+frontend-copy/
+frontend-copy-copy/

@@ -1,10 +1,15 @@
 package com.example.Real_Time_Collaborative_Document_Editor.controller;
 
+import com.example.Real_Time_Collaborative_Document_Editor.dto.DocumentOperationResponse;
+import com.example.Real_Time_Collaborative_Document_Editor.dto.DocumentResponse;
+import com.example.Real_Time_Collaborative_Document_Editor.dto.DocumentSummaryResponse;
 import com.example.Real_Time_Collaborative_Document_Editor.dto.DocumentUpdateRequest;
 import com.example.Real_Time_Collaborative_Document_Editor.entity.Document;
+import com.example.Real_Time_Collaborative_Document_Editor.entity.DocumentOperation;
 import com.example.Real_Time_Collaborative_Document_Editor.entity.DocumentPermission;
 import com.example.Real_Time_Collaborative_Document_Editor.entity.DocumentVersion;
 import com.example.Real_Time_Collaborative_Document_Editor.enums.Role;
+import com.example.Real_Time_Collaborative_Document_Editor.repository.DocumentOperationRepository;
 import com.example.Real_Time_Collaborative_Document_Editor.repository.DocumentRepository;
 import com.example.Real_Time_Collaborative_Document_Editor.repository.DocumentVersionRepository;
 import com.example.Real_Time_Collaborative_Document_Editor.service.DocumentService;
@@ -26,7 +31,8 @@ public class DocumentController {
     private DocumentRepository repo;
     @Autowired
     private DocumentVersionRepository documentVersionRepository;
-
+    @Autowired
+    private DocumentOperationRepository documentOperationRepository;
 
     @PostMapping("/createDocument")
 
@@ -36,17 +42,17 @@ public class DocumentController {
     }
 
     @GetMapping("/getAllDocuments")
-    public List<Document> getAllDocument(){
+    public List<DocumentSummaryResponse> getAllDocument(){
         return service.getAllDocuments();
     }
 
     @GetMapping("/getDocument/{id}")
-    public Document getDocument(@PathVariable Long id,Authentication authentication){
+    public DocumentResponse getDocument(@PathVariable Long id, Authentication authentication){
         return service.getDocument(id,authentication.getName());
     }
 
     @PutMapping("/updateDocument/{id}")
-    public Document updateDocument(@PathVariable Long id, @RequestBody DocumentUpdateRequest updatedDocument, Authentication authentication){
+    public DocumentResponse updateDocument(@PathVariable Long id, @RequestBody DocumentUpdateRequest updatedDocument, Authentication authentication){
         return service.updateDocument(id,updatedDocument,authentication.getName());
     }
 
@@ -84,8 +90,26 @@ public class DocumentController {
     }
 
     @PutMapping("/{DocumentId}/versions/{versionId}/restore")
-    public Document restoreVersion(@PathVariable Long versionId, @PathVariable Long DocumentId, Authentication authentication){
+    public DocumentResponse restoreVersion(@PathVariable Long versionId, @PathVariable Long DocumentId, Authentication authentication){
 
         return service.restoreVersion(versionId,DocumentId,authentication.getName());
+    }
+
+    @GetMapping("/{id}/operations")
+    public List<DocumentOperationResponse> getOperations(@PathVariable Long id) {
+
+        return documentOperationRepository
+                .findByDocumentIdOrderByVersionAsc(id)
+                .stream()
+                .map(operation -> new DocumentOperationResponse(
+                        operation.getId(),
+                        operation.getOperation(),
+                        operation.getPosition(),
+                        operation.getText(),
+                        operation.getVersion(),
+                        operation.getCreatedAt(),
+                        operation.getUser().getEmail()
+                ))
+                .toList();
     }
 }

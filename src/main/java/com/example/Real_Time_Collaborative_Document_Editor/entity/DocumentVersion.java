@@ -12,7 +12,14 @@ import java.time.LocalDateTime;
 @Entity
 @Getter
 @Setter
-@Table(name = "document_versions")
+@Table(name = "document_versions",
+       indexes = {
+        @Index(
+                name = "idx_document_version_document_created",
+                columnList = "document_id,created_at"
+        )
+       }
+)
 @NoArgsConstructor
 @AllArgsConstructor
 public class DocumentVersion {
@@ -22,7 +29,7 @@ public class DocumentVersion {
     private Long id;
 
     @JsonIgnore
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_id", nullable = false)
     private Document document;
 

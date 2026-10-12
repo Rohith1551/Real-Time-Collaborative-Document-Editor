@@ -9,6 +9,15 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(
+        name = "document_operation",
+        indexes = {
+                @Index(
+                        name = "idx_document_operation_document_version",
+                        columnList = "document_id, version"
+                )
+        }
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -19,10 +28,15 @@ public class DocumentOperation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private Long documentId;
+    @ManyToOne
+    @JoinColumn(name = "document_id", nullable = false)
+    private Document document;
 
-    private String email;
+    @ManyToOne
+    @JoinColumn(name = "user_id",nullable = false)
+    private User user;
 
+    @Column(nullable = false)
     private String operation;
 
     private Integer position;
@@ -30,7 +44,9 @@ public class DocumentOperation {
     @Column(columnDefinition = "TEXT")
     private String text;
 
+    @Column(nullable = false)
     private Long version;
 
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 }

@@ -1,12 +1,17 @@
 package com.example.Real_Time_Collaborative_Document_Editor.controller;
 
+import com.example.Real_Time_Collaborative_Document_Editor.dto.DocumentConflictResponse;
+import com.example.Real_Time_Collaborative_Document_Editor.dto.DocumentResponse;
 import com.example.Real_Time_Collaborative_Document_Editor.dto.DocumentWebSocketMessage;
 import com.example.Real_Time_Collaborative_Document_Editor.entity.Document;
+import com.example.Real_Time_Collaborative_Document_Editor.exceptions.DocumentVersionConflictException;
 import com.example.Real_Time_Collaborative_Document_Editor.service.DocumentService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.handler.annotation.MessageExceptionHandler;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.messaging.simp.annotation.SendToUser;
 import org.springframework.stereotype.Controller;
 
 import java.security.Principal;
@@ -40,5 +45,26 @@ public class DocumentWebSocketController {
         String destination = "/topic/document/" + message.getDocumentId();
 
         messagingTemplate.convertAndSend(destination,message);
+    }
+
+    @MessageExceptionHandler(DocumentVersionConflictException.class)
+    @SendToUser("/queue/errors")
+    public DocumentWebSocketMessage handleVersionConflict(
+            DocumentVersionConflictException exception,
+            Principal principal) {
+
+        DocumentResponse document = documentService.getDocument(
+                exception.getDocumentId(),
+                principal.getName()
+        );
+
+        DocumentWebSocketMessage response =
+                new DocumentWebSocketMessage();
+
+        response.setDocumentId(exception.getDocumentId());
+        response.setContent(document.getContent());
+        response.setVersion(document.getVersion());
+
+        return response;
     }
 }

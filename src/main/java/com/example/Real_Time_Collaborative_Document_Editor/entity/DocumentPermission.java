@@ -9,7 +9,14 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "DocumentPermissions")
+@Table(name = "document_permissions",
+       indexes = {
+        @Index(
+                name = "idx_document_permission_document_user",
+                columnList = "document_id,user_id"
+        )
+        }
+)
 @Getter
 @Setter
 @AllArgsConstructor
@@ -21,7 +28,7 @@ public class DocumentPermission {
     private Long id;
 
     @JsonIgnore
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "document_id")
     private Document document;
 
